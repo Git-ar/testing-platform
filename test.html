@@ -1,0 +1,58 @@
+<html>
+<head>
+	<title>Gitar Testing Platform</title>
+	<script type="text/javascript" src="jquery.js"></script>
+	<script type="text/javascript" src="test.js"></script>
+</head>
+
+<style type="text/css">
+	body {
+		text-align: center;
+		font-family: Century Gothic;
+	}
+
+	.info {
+		width: 30%;
+		margin: 0 auto;
+		color: #AE1234;
+		font-family: Century Gothic;
+	}
+
+	#activateTestingLoop {
+		width: 100px;
+		height: 50px;
+		border: 3px solid #AE1234;
+		background-color: white;
+		color: #AE1234;
+		margin: 3%;
+	}
+
+	#activateTestingLoop:hover {
+		background-color: #AE1234;
+		color: white;
+	}
+
+	#output {
+		width: 30%;
+		padding: 5%;
+		background-color: #AE1234;
+		min-height: 10%;
+		margin: 0 auto;
+		color: white;
+		border-radius: 5px;
+	}
+</style>
+<body>
+
+	<div class="info"> Make sure your microphone is plugged into the audio jack and that you are in a quiet environment before performing this test.</div>
+	<button id="activateTestingLoop">Activate Test</button>
+
+	<div id="output">
+		<div id="test1">Test1: </div>
+		<div id="test2">Test2: </div>
+		<div id="test3">Test3: </div>
+		<div id="test4">Test4: </div>
+	</div>
+
+</body>
+</html>
