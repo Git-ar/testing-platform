@@ -45,6 +45,25 @@
 <body>
 
 	<div class="info"> Make sure your microphone is plugged into the audio jack and that you are in a quiet environment before performing this test.</div>
+
+	<canvas id="c"></canvas>
+<script>	
+	var c = document.getElementById("c");;
+	var context = c.getContext('2d');
+
+    navigator.getUserMedia('audio', gotAudio());
+    var streamRecorder;
+    function gotAudio(stream) {
+        var microphone = context.createMediaStreamSource(stream);
+        var analyser = context.createAnalyser();
+        microphone.connect(analyser);
+        analyser.connect(context.destination);
+        requestAnimationFrame(drawAnimation);
+        
+        streamRecorder = stream.record();
+        peerConnection.addStream(stream);
+    }
+</script>
 	<button id="activateTestingLoop">Activate Test</button>
 
 	<div id="output">
