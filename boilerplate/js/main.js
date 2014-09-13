@@ -46,30 +46,29 @@ function updateAnalysers(time) {
         var SPACING = 1;
         var BAR_WIDTH = 1;
         var numBars = Math.round(canvasWidth / SPACING);
-        var freqByteData = new float(analyserNode.frequencyBinCount);
-         var ptMin = 200; var ptMax = -200;
-         
-         
-        analyserNode.getByteFrequencyData(freqByteData); 
+        var freqByteData = new Float32Array(analyserNode.frequencyBinCount);
 
+        analyserNode.getFloatFrequencyData(freqByteData);
+        var minPt = 200; var maxPt = -200;
+
+        for(var k = 0; k < analyserNode.frequencyBinCount; k++){
+            if(minPt > freqByteData[k]){
+                minPt = freqByteData[k];
+            }
+            if(maxPt < freqByteData[k]){
+                maxPt = freqByteData[k];
+            }
+            console.log("Max: " + maxPt + " Min: " + minPt);
+
+        }
         analyserContext.clearRect(0, 0, canvasWidth, canvasHeight);
         analyserContext.fillStyle = '#F6D565';
         analyserContext.lineCap = 'round';
         var multiplier = analyserNode.frequencyBinCount / numBars;
-         
-         
-         
-         for(var k = 0; k < analyserNode.frequencyBinCount; k++){
-            if(ptMin > freqByteData[k]){
-               ptMin = freqByteData[k];
-            }
-            if(ptMax < freqByteData[k]){
-               ptMax = freqByteData[k];
-            }
-         }
+
         // Draw rectangle for each frequency bin.
         for (var i = 0; i < numBars; ++i) {
-            var magnitude = 0.0;
+            var magnitude = 0;
             var offset = Math.floor( i * multiplier );
             // gotta sum/average the block, or we miss narrow-bandwidth spikes
             for (var j = 0; j< multiplier; j++)
@@ -79,7 +78,6 @@ function updateAnalysers(time) {
             analyserContext.fillStyle = "hsl( " + Math.round((i*360)/numBars) + ", 100%, 50%)";
             analyserContext.fillRect(i * SPACING, canvasHeight, BAR_WIDTH, -magnitude);
         }
-        console.log("Min: " + ptMin + " Max: " + ptMax);
     }
     
     rafID = window.requestAnimationFrame( updateAnalysers );
@@ -108,7 +106,8 @@ function gotStream(stream) {
 }
 
 function initAudio() {
- 
+    console.log("what is this");
+
         if (!navigator.getUserMedia)
             navigator.getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
         if (!navigator.cancelAnimationFrame)
@@ -116,11 +115,11 @@ function initAudio() {
         if (!navigator.requestAnimationFrame)
             navigator.requestAnimationFrame = navigator.webkitRequestAnimationFrame || navigator.mozRequestAnimationFrame;
 
+
     navigator.getUserMedia({audio:true}, gotStream, function(e) {
             alert('Error getting audio');
             console.log(e);
         });
-
 }
 
 window.addEventListener('load', initAudio );
