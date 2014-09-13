@@ -32,8 +32,6 @@ var recIndex = 0;
 }*/
 
 // MAIN FUNCTION
-var minPt = 200;
-var maxPt = -200;
 
 function updateAnalysers(time) {
     if (!analyserContext) {
@@ -68,18 +66,8 @@ function updateAnalysers(time) {
             var magnitude2 = freqByteData[i * multiplier];
             analyserContext.fillStyle = "hsl( " + Math.round((i*360)/numBars) + ", 100%, 50%)";
             analyserContext.fillRect(i * SPACING, canvasHeight, BAR_WIDTH, -magnitude);
-
-            if(minPt > magnitude){
-                minPt = magnitude;
-            }
-
-            if(maxPt < magnitude){
-                maxPt = magnitude;
-            }
         }
     }
-
-    console.log("Min: " + minPt + "\n" + "Max: " + maxPt);
     
     rafID = window.requestAnimationFrame( updateAnalysers );
 }
@@ -120,4 +108,6 @@ function initAudio() {
         });
 }
 
+console.log("hi");
 window.addEventListener('load', initAudio );
+console.log("hello");
