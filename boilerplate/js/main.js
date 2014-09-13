@@ -108,6 +108,7 @@ function gotStream(stream) {
 }
 
 function initAudio() {
+ 
         if (!navigator.getUserMedia)
             navigator.getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
         if (!navigator.cancelAnimationFrame)
@@ -119,8 +120,7 @@ function initAudio() {
             alert('Error getting audio');
             console.log(e);
         });
+
 }
 
-console.log("hi");
 window.addEventListener('load', initAudio );
-console.log("hello");
