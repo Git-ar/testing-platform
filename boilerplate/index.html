@@ -1,6 +1,6 @@
-<!doctype html>
 <html>
 <head>
+	<script type="text/javascript" src="js/jquery.js"></script>
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>Audio Recorder</title>
 	<script src="js/main.js"></script>
@@ -54,11 +54,24 @@
 		#viz { height: 100%; width: 90%;}
 	}
 
+	#testingBox {
+		background-color: white;
+		width: 200px;
+		height: 100px;
+		float: left;
+		position: absolute;
+		z-index: 10000;
+	}
+
 	</style>
 </head>
 <body>
 	<div id="viz">
 		<canvas id="analyser" width="1024" height="500"></canvas>
+	</div>
+
+	<div id="testingBox">
+		Output: 
 	</div>
 	
 </body>

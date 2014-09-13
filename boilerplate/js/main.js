@@ -13,113 +13,126 @@
    limitations under the License.
 */
 
-window.AudioContext = window.AudioContext || window.webkitAudioContext;
+var outputBox;
 
-var audioContext = new AudioContext();
-var audioInput = null,
-    realAudioInput = null,
-    inputPoint = null,
-    audioRecorder = null;
-var rafID = null;
-var analyserContext = null;
-var canvasWidth, canvasHeight;
-var recIndex = 0;
+$( document ).ready(function() {
+    console.log( "ready!" );
+    outputBox = $("#testingBox").val();
+    console.log(outputBox);
 
-/*function saveAudio() {
-    audioRecorder.exportWAV( doneEncoding );
-    // could get mono instead by saying
-    // audioRecorder.exportMonoWAV( doneEncoding );
-}*/
 
-// MAIN FUNCTION
+    window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
-function updateAnalysers(time) {
-    if (!analyserContext) {
-        var canvas = document.getElementById("analyser");
-        canvasWidth = canvas.width;
-        canvasHeight = canvas.height;
-        analyserContext = canvas.getContext('2d');
+    var audioContext = new AudioContext();
+    var audioInput = null,
+        realAudioInput = null,
+        inputPoint = null,
+        audioRecorder = null,
+        biquadFilter = null;
+    var rafID = null;
+    var analyserContext = null;
+    var canvasWidth, canvasHeight;
+    var recIndex = 0;
+
+
+    // MAIN FUNCTION
+
+    function updateAnalysers(time) {
+        if (!analyserContext) {
+            var canvas = document.getElementById("analyser");
+            canvasWidth = canvas.width;
+            canvasHeight = canvas.height;
+            analyserContext = canvas.getContext('2d');
+        }
+
+        // analyzer draw code here
+        {
+            var SPACING = 1;
+            var BAR_WIDTH = 1;
+            var numBars = Math.round(canvasWidth / SPACING);
+            var freqByteData = new Uint8Array(analyserNode.frequencyBinCount);
+
+            analyserNode.getByteFrequencyData(freqByteData);
+            var minPt = 200; var maxPt = -200;
+
+            for(var k = 0; k < analyserNode.frequencyBinCount; k++){
+                if(minPt > freqByteData[k]){
+                    minPt = freqByteData[k];
+                }
+                if(maxPt < freqByteData[k]){
+                    maxPt = freqByteData[k];
+                }
+                //console.log("Max: " + maxPt + " Min: " + minPt);
+            }
+
+            analyserContext.clearRect(0, 0, canvasWidth, canvasHeight);
+            analyserContext.fillStyle = '#F6D565';
+            analyserContext.lineCap = 'round';
+            var multiplier = analyserNode.frequencyBinCount / numBars;
+
+            // Draw rectangle for each frequency bin.
+            for (var i = 0; i < numBars; ++i) {
+                var magnitude = 0;
+                var offset = Math.floor( i * multiplier );
+                // gotta sum/average the block, or we miss narrow-bandwidth spikes
+                for (var j = 0; j < multiplier; j++)
+                  magnitude += freqByteData[offset + j];
+                magnitude = (i > 200)? magnitude / multiplier: 0;
+                
+                var magnitude2 = freqByteData[i * multiplier];
+                analyserContext.fillStyle = "hsl( " + Math.round((i*360)/numBars) + ", 100%, 50%)";
+                analyserContext.fillRect(i * SPACING, canvasHeight, BAR_WIDTH, -magnitude);
+            }
+
+            //document.getElementById("testingBox").value = multiplier;
+            $("#testingBox").html("Output: "+magnitude);
+            console.log(magnitude);
+        }
+        
+        rafID = window.requestAnimationFrame( updateAnalysers );
+    }
+    function gotStream(stream) {
+        inputPoint = audioContext.createGain();
+
+        // Create an AudioNode from the stream.
+        realAudioInput = audioContext.createMediaStreamSource(stream);
+        biquadFilter = audioContext.createBiquadFilter(); //Here
+
+        audioInput = realAudioInput;
+        audioInput.connect(inputPoint);
+
+
+    //    audioInput = convertToMono( input );
+
+        analyserNode = audioContext.createAnalyser();
+        analyserNode.fftSize = 2048;
+        inputPoint.connect( analyserNode );
+
+        
+
+        zeroGain = audioContext.createGain();
+        //zeroGain.gain.value = 0.0;
+        //inputPoint.connect( zeroGain );
+        //zeroGain.connect( audioContext.destination );
+        updateAnalysers();
     }
 
-    // analyzer draw code here
-    {
-        var SPACING = 1;
-        var BAR_WIDTH = 1;
-        var numBars = Math.round(canvasWidth / SPACING);
-        var freqByteData = new Float32Array(analyserNode.frequencyBinCount);
+    function initAudio() {
+        
+            if (!navigator.getUserMedia)
+                navigator.getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+            if (!navigator.cancelAnimationFrame)
+                navigator.cancelAnimationFrame = navigator.webkitCancelAnimationFrame || navigator.mozCancelAnimationFrame;
+            if (!navigator.requestAnimationFrame)
+                navigator.requestAnimationFrame = navigator.webkitRequestAnimationFrame || navigator.mozRequestAnimationFrame;
 
-        analyserNode.getFloatFrequencyData(freqByteData);
-        var minPt = 200; var maxPt = -200;
 
-        for(var k = 0; k < analyserNode.frequencyBinCount; k++){
-            if(minPt > freqByteData[k]){
-                minPt = freqByteData[k];
-            }
-            if(maxPt < freqByteData[k]){
-                maxPt = freqByteData[k];
-            }
-            console.log("Max: " + maxPt + " Min: " + minPt);
-
-        }
-        analyserContext.clearRect(0, 0, canvasWidth, canvasHeight);
-        analyserContext.fillStyle = '#F6D565';
-        analyserContext.lineCap = 'round';
-        var multiplier = analyserNode.frequencyBinCount / numBars;
-
-        // Draw rectangle for each frequency bin.
-        for (var i = 0; i < numBars; ++i) {
-            var magnitude = 0;
-            var offset = Math.floor( i * multiplier );
-            // gotta sum/average the block, or we miss narrow-bandwidth spikes
-            for (var j = 0; j< multiplier; j++)
-                magnitude += freqByteData[offset + j];
-            magnitude = magnitude / multiplier;
-            var magnitude2 = freqByteData[i * multiplier];
-            analyserContext.fillStyle = "hsl( " + Math.round((i*360)/numBars) + ", 100%, 50%)";
-            analyserContext.fillRect(i * SPACING, canvasHeight, BAR_WIDTH, -magnitude);
-        }
+        navigator.getUserMedia({audio:true}, gotStream, function(e) {
+                alert('Error getting audio');
+                console.log(e);
+            });
     }
-    
-    rafID = window.requestAnimationFrame( updateAnalysers );
-}
-function gotStream(stream) {
-    inputPoint = audioContext.createGain();
 
-    // Create an AudioNode from the stream.
-    realAudioInput = audioContext.createMediaStreamSource(stream);
-    audioInput = realAudioInput;
-    audioInput.connect(inputPoint);
+    window.addEventListener('load', initAudio );
 
-//    audioInput = convertToMono( input );
-
-    analyserNode = audioContext.createAnalyser();
-    analyserNode.fftSize = 2048;
-    inputPoint.connect( analyserNode );
-
-    //audioRecorder = new Recorder( inputPoint );
-
-    zeroGain = audioContext.createGain();
-    zeroGain.gain.value = 0.0;
-    inputPoint.connect( zeroGain );
-    zeroGain.connect( audioContext.destination );
-    updateAnalysers();
-}
-
-function initAudio() {
-    console.log("what is this");
-
-        if (!navigator.getUserMedia)
-            navigator.getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-        if (!navigator.cancelAnimationFrame)
-            navigator.cancelAnimationFrame = navigator.webkitCancelAnimationFrame || navigator.mozCancelAnimationFrame;
-        if (!navigator.requestAnimationFrame)
-            navigator.requestAnimationFrame = navigator.webkitRequestAnimationFrame || navigator.mozRequestAnimationFrame;
-
-
-    navigator.getUserMedia({audio:true}, gotStream, function(e) {
-            alert('Error getting audio');
-            console.log(e);
-        });
-}
-
-window.addEventListener('load', initAudio );
+});
