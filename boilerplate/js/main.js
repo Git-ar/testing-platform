@@ -46,18 +46,30 @@ function updateAnalysers(time) {
         var SPACING = 1;
         var BAR_WIDTH = 1;
         var numBars = Math.round(canvasWidth / SPACING);
-        var freqByteData = new Uint8Array(analyserNode.frequencyBinCount);
-
+        var freqByteData = new float(analyserNode.frequencyBinCount);
+         var ptMin = 200; var ptMax = -200;
+         
+         
         analyserNode.getByteFrequencyData(freqByteData); 
 
         analyserContext.clearRect(0, 0, canvasWidth, canvasHeight);
         analyserContext.fillStyle = '#F6D565';
         analyserContext.lineCap = 'round';
         var multiplier = analyserNode.frequencyBinCount / numBars;
-
+         
+         
+         
+         for(var k = 0; k < analyserNode.frequencyBinCount; k++){
+            if(ptMin > freqByteData[k]){
+               ptMin = freqByteData[k];
+            }
+            if(ptMax < freqByteData[k]){
+               ptMax = freqByteData[k];
+            }
+         }
         // Draw rectangle for each frequency bin.
         for (var i = 0; i < numBars; ++i) {
-            var magnitude = 0;
+            var magnitude = 0.0;
             var offset = Math.floor( i * multiplier );
             // gotta sum/average the block, or we miss narrow-bandwidth spikes
             for (var j = 0; j< multiplier; j++)
@@ -67,6 +79,7 @@ function updateAnalysers(time) {
             analyserContext.fillStyle = "hsl( " + Math.round((i*360)/numBars) + ", 100%, 50%)";
             analyserContext.fillRect(i * SPACING, canvasHeight, BAR_WIDTH, -magnitude);
         }
+        console.log("Min: " + ptMin + " Max: " + ptMax);
     }
     
     rafID = window.requestAnimationFrame( updateAnalysers );
