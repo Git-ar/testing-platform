@@ -1,19 +1,17 @@
 //alert("Sparse Vector");
 
-
-
-
-function SparseVector(chord){
+function SparseVector(){
 	var SV = {};
-	SV.range = 2;
-	SV.freqs = getChordsFreqs(chord);
+	SV.range = 0;
+	SV.freqs = [];
+	for(var i = 5; i < 20; i++){
+		SV.freqs.push(606 * i); 
+	}
 	SV.sampleRate = 44100;
 	SV.size = SV.freqs.length;
+
 	return SV;
 }
-
-
-
 function prod(SV, arr){
 	var prod = 0;
 	//console.log(arr[400] + "   " + arr[400] * 0.001 + "   " + SV.size);
@@ -23,50 +21,12 @@ function prod(SV, arr){
 			prod += arr[k - SV.range/2 + j];
 		}
 	}
-	return prod / Math.sqrt(SV.size * (SV.range + 1) );
+	return prod / Math.sqrt(SV.size);
 }
-
 function magn(arr){
 	var mag = 0.0;
 	for(var i = 0; i < arr.length; i++){
-		mag += arr[i] * arr[i];
+		mag += arr[i] * arr[i] * 0.01;
 	}
-	return Math.sqrt(mag);
+	return 10 * Math.sqrt(mag);
 }
-
-
-function getChordsFreqs(chord){
-	var freqs = [];
-	switch(chord){
-		case 0:
-			for(var i = 1; i < 2; i++){
-				freqs.push(606 * i); 
-			}
-		break;
-		case 1:
-			for(var i = 1; i < 2; i++){
-				freqs.push(506 * i); 
-			}		
-		break;
-		
-		case 2:
-			for(var i = 1; i < 2; i++){
-				freqs.push(706 * i); 
-			}		
-		break;
-		case 3:
-			for(var i = 1; i < 2; i++){
-				freqs.push(806 * i); 
-			}
-		break;
-
-		case 4:
-			for(var i = 1; i < 2; i++){
-				freqs.push(906 * i); 
-			}	
-		break;
-
-	}
-	return freqs;
-}
-
