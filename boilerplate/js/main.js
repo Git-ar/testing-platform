@@ -16,6 +16,12 @@
 var cAverage = 0;
 
 var outputBox;
+var CurrentChord = -1;
+
+function getCurrentChord(){
+    return CurrentChord;
+}
+
 
 $( document ).ready(function() {
     outputBox = $("#testingBox").val();
@@ -34,7 +40,14 @@ $( document ).ready(function() {
     var analyserContext = null;
     var canvasWidth, canvasHeight;
     var recIndex = 0;
+    var Chords = [];
 
+
+    function initChords(){
+        for(var i = 0; i < 5; i++){
+            Chords.push(SparseVector(i));
+        }
+    }
 
     // MAIN FUNCTION
 
@@ -50,12 +63,32 @@ $( document ).ready(function() {
         // analyzer draw code here
         {
             var freqByteData = new Uint8Array(analyserNode.frequencyBinCount);
-            var SR = SparseVector();
-            
             analyserNode.getByteFrequencyData(freqByteData);
-            var p = prod(SR, freqByteData);
+
             var m = magn(freqByteData);
-            console.log("Prod: " + Math.round(100 * p / m) / 100 + "  magnitude: " +  Math.round(m) );
+            //console.log(m);
+            var products = [];
+            for(var k = 0; k < 5; k++){
+                products.push( prod(Chords[k]  , freqByteData) / m) ;
+            }
+
+            /*Find Most possible chprd*/
+            var BestChord = 0;
+            for(var k = 0; k < 5; k++){
+                if(products[k] > products[BestChord])
+                    BestChord = k;
+            }
+            var minimum_chord_value = 0.1;
+            CurrentChord = (minimum_chord_value < products[BestChord])? BestChord: -1; 
+            
+            console.log("CurrentChord: " + CurrentChord);
+            console.log(
+                " P: " + (Math.round(products[0] * 100) / 100) +
+                " P: " + Math.round(products[1] * 100) / 100 +
+                " P: " + Math.round(products[2] * 100) / 100 +
+                " P: " + Math.round(products[3] * 100) / 100 +
+                " P: " + Math.round(products[4] * 100) / 100 +
+                "  magnit: " +  Math.round(m) );
             plotArray(freqByteData);
         }
         
@@ -92,13 +125,14 @@ $( document ).ready(function() {
             var SPACING = 2;
             var BAR_WIDTH = 1;
             var numBars = Math.round(canvasWidth / SPACING);
-
+            console.log();
             analyserContext.clearRect(0, 0, canvasWidth, canvasHeight);
             
             analyserContext.fillStyle = '#F6D565';
             analyserContext.lineCap = 'round';
             var multiplier = analyserNode.frequencyBinCount / numBars;
-
+            
+            //console.log("Multiplier: " + multiplier);
             // Draw rectangle for each frequency bin.
             for (var i = 0; i < numBars; ++i) {
                 var magnitude = 0;
@@ -109,7 +143,11 @@ $( document ).ready(function() {
                 magnitude = magnitude / multiplier;
                 
                 var magnitude2 = arr[i * multiplier];
-                analyserContext.fillStyle = "#FF6600";
+                if(i == Math.round(600.0 * 2048.0 / (44100 * multiplier)) ){
+                    analyserContext.fillStyle = "#FF6600";
+                } else {
+                    analyserContext.fillStyle = "#00FF00";
+                }
                 analyserContext.fillRect(i * SPACING, canvasHeight, BAR_WIDTH, -magnitude );
                 /*
                 $("#testingBox").html("i         : " + i + "\n" +
@@ -118,12 +156,12 @@ $( document ).ready(function() {
                                       );
                 */
             }
-
     }
 
 
     function initAudio() {
-        
+            initChords();
+
             if (!navigator.getUserMedia)
                 navigator.getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
             if (!navigator.cancelAnimationFrame)
@@ -139,7 +177,6 @@ $( document ).ready(function() {
     }
 
     window.addEventListener('load', initAudio );
-
 
 
 });
